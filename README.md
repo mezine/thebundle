@@ -1,8 +1,8 @@
-= thebundle
+# thebundle
 
 This is a JavaScript build tool for our proejects that works with gulp.
 
-== Installation
+## Installation
 
 This will install thebundle from the github repo and save it into `package.json`.
 
@@ -11,7 +11,7 @@ npm install git://github.com/mezine/thebundle.git --save-dev
 ```
 
 
-== Usage
+## Usage
 
 Create `gulpfile.js` in the root directory of your project.
 
@@ -40,7 +40,7 @@ gulp build --production
 ```
 
 
-=== Hint
+### Hint
 
 To make it the default task, just name the gulp task default.
 
@@ -50,7 +50,7 @@ gulp.task('default', function () {
 })
 ```
 
-== bundle(src, dest, externals)
+## bundle(src, dest, externals)
 
 `src` is the source file. Can be a String or an Array of String.
 
