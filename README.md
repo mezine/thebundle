@@ -10,7 +10,9 @@ This will install thebundle from the github repo and save it into `package.json`
 npm install git://github.com/mezine/thebundle.git --save-dev
 ```
 
-Note `npm update` won't work. It will see that `thebundle` is installed and it won't update it. To make it update, add the git hash to the end like this:
+Note `npm update` won't work.
+
+Instead, add the git hash to the module location in `package.json`.
 
 ```javascript
 {
@@ -21,7 +23,7 @@ Note `npm update` won't work. It will see that `thebundle` is installed and it w
 }
 ```
 
-Once you add the git hash, the update will work.
+Then use `npm install` and it will work.
 
 ## Usage
 
