@@ -12,13 +12,13 @@ npm install git://github.com/mezine/thebundle.git --save-dev
 
 Note `npm update` won't work.
 
-Instead, add the git hash to the module location in `package.json`.
+Instead, add the git hash to the module location in `package.json`. I only used the first 8 characters of the hash here which works fine. You can find the hash in the github repo by clicking on the `x commits` text near the top of the repo.
 
 ```javascript
 {
   // ...
   "devDependencies": {
-    "thebundle": "git://github.com/mezine/thebundle.git#c462c730a8605861ff84379d7cb2870ec7a0cc1a"
+    "thebundle": "git://github.com/mezine/thebundle.git#c462c730"
   }
 }
 ```
