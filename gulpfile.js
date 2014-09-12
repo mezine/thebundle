@@ -1,0 +1,8 @@
+var gulp = require('gulp');
+var bundle = require('./bundle');
+
+gulp.task('default', function() {
+  var alphaBundle = bundle('./js/alpha.js', './build/alpha.js');
+  var bravoBundle = bundle('./js/bravo.js', './build/bravo.js', alphaBundle);
+  var joinBundle = bundle(['./js/alpha.js', './js/bravo.js'], './build/join.js', alphaBundle);
+});
