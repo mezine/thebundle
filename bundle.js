@@ -34,7 +34,7 @@ function bundleWithOpts(opts) {
   var destBasename = path.basename(dest);
   var bundler, rebundle;
   bundler = browserify(src, {
-    basedir: __dirname, 
+    // basedir: __dirname, 
     debug: dev, 
     cache: {}, // required for watchify
     packageCache: {}, // required for watchify
