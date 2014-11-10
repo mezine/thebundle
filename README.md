@@ -77,3 +77,9 @@ gulp.task('default', function () {
 
 Apart from externalizing the src files, `bundle.lib` works the same as bundle.
 
+
+## Known Issues
+
+* You must explicitly specify the modules in `bundle.lib`. You cannot assume that just because your source bundle requires another bundle, that the second bundle will automatically be exposed.
+
+* The first time the bundle is created, the externals are not removed. This is a weird bug which I'll address later. In the meantime, the fact that additional rebundles in a watchify will happen MUCH faster is worth it.
