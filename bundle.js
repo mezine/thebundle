@@ -16,44 +16,43 @@ var streamify = require('gulp-streamify');
 var uglify = require('gulp-uglify');
 var path = require('path');
 var argv = require('yargs').argv;
+var arrayize = require('arrayize');
 
 var production = argv.production || process.env.NODE_ENV === 'production';
 
-function bundleWithOpts(opts) {
+// options for browserify which are required when using watchify
+var watchifyOptions = {
+  cache: {},
+  packageCache: {},
+  fullPaths: true
+};
+
+function _bundle(opts) {
   var src = opts.src || null;
   var dest = opts.dest;
   var dev = !production;
   var watch = dev;
   var debug = dev;
-  var requires = opts.requires || [];
-  var externals = opts.externals || [];
-  if (!src && requires.length === 0) {
-    throw "You must specify either a .src or an array in .requires";
+  var requires = opts.requires;
+  var externals = opts.externals;
+  if (!src && !requires) {
+    throw "You must specify either a `src` or `requires`";
   }
   var destDirname = path.dirname(dest);
   var destBasename = path.basename(dest);
-  var bundler, rebundle;
-  bundler = browserify(src, {
-    // basedir: __dirname, 
-    debug: dev, 
-    cache: {}, // required for watchify
-    packageCache: {}, // required for watchify
-    fullPaths: watch // required to be true only for watchify
-  });
+  var bundler = browserify(src, _.extend({debug: dev}, watchifyOptions));
 
   // Mark anything in externals as external so that it won't be compiled into
   // the bundle.
-
-  if (!_.isArray(externals)) {
-    externals = [externals];
-  }
-  externals.forEach(function (external) {
+  arrayize(externals).forEach(function (external) {
     bundler.external(external);
   });
 
-  // Force a require
-  requires.forEach(function (module) {
-    bundler.require(module);
+  // I believe this makes the modules inside available on the outside; however,
+  // it does not make the module that was required in available. Only the ones
+  // inside the module.
+  arrayize(requires).forEach(function (module) {
+    bundler.require(module, {expose: module});
   });
 
   function log(msg) {
@@ -66,17 +65,18 @@ function bundleWithOpts(opts) {
     bundler.on('log', log);
   }
  
+  // React transformations
   bundler.transform([reactify, {'es6': true}]);
 
-  rebundle = function() {
+  var rebundle = function() {
     var stream = bundler.bundle();
-    // outputs error message to the console.
-    stream.on('error', log);
+    stream.on('error', log); // error messages
     stream = stream.pipe(source(destBasename));
     if (production) {
       stream = stream.pipe(streamify(uglify()));
     }
-    return stream.pipe(gulp.dest(destDirname));
+    var returnValue = stream.pipe(gulp.dest(destDirname));
+    return returnValue;
   };
  
   bundler.on('update', rebundle);
@@ -88,8 +88,17 @@ function bundleWithOpts(opts) {
   return bundler;
 }
 
-function bundleScripts(src, dest, externals) {
-  return bundleWithOpts({
+function bundleLib(src, dest, externals) {
+  return _bundle({
+    requires: src,
+    dest: dest,
+    watch: true,
+    externals: externals
+  });
+}
+
+function bundle(src, dest, externals) {
+  return _bundle({
     src: src,
     dest: dest,
     watch: true,
@@ -97,8 +106,6 @@ function bundleScripts(src, dest, externals) {
   });
 }
 
-function bundle(src, dest, libs) {
-  return bundleScripts(src, dest, libs);
-}
+bundle.lib = bundleLib;
 
 module.exports = bundle;
