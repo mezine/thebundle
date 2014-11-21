@@ -56,7 +56,9 @@ function _bundle(opts) {
   });
 
   function log(msg) {
-    console.log(src + ': ' + msg);
+    // console.log(src, requires);
+    var from = (src !== null) ? src : JSON.stringify(requires);
+    console.log('- ' + from + ': ' + msg);
   }
  
   if(watch) {
