@@ -17,6 +17,7 @@ var uglify = require('gulp-uglify');
 var path = require('path');
 var argv = require('yargs').argv;
 var arrayize = require('arrayize');
+var colors = require('colors');
 
 var production = argv.production || process.env.NODE_ENV === 'production';
 
@@ -28,13 +29,16 @@ var watchifyOptions = {
 };
 
 function _bundle(opts) {
+
   var src = opts.src || null;
   var dest = opts.dest;
   var dev = !production;
   var watch = dev;
   var debug = dev;
+   // make these libs available outside the bundle
   var requires = opts.requires;
-  var externals = opts.externals;
+  // makes sure these libs are not included in the bundle (i.e. they are external)
+  var externals = opts.externals; 
   if (!src && !requires) {
     throw "You must specify either a `src` or `requires`";
   }
@@ -42,32 +46,33 @@ function _bundle(opts) {
   var destBasename = path.basename(dest);
   var bundler = browserify(src, _.extend({debug: dev}, watchifyOptions));
 
-  // Mark anything in externals as external so that it won't be compiled into
-  // the bundle.
+  // External modules are not included in the current bundle.
+  // We expect to find them in a separate bundle
   arrayize(externals).forEach(function (external) {
     bundler.external(external);
   });
 
-  // I believe this makes the modules inside available on the outside; however,
-  // it does not make the module that was required in available. Only the ones
-  // inside the module.
+  // Modules marked for require can be used outside this bundle.
+  // To access them, they must be marked as external in the other bundle.
   arrayize(requires).forEach(function (module) {
+    bundler.add(module);
     bundler.require(module, {expose: module});
   });
 
   function log(msg) {
-    // console.log(src, requires);
-    var from = (src !== null) ? src : JSON.stringify(requires);
-    console.log('- ' + from + ': ' + msg);
+    var from = (src !== null) ? src : requires.join(', ');
+    console.log('-------------------------------------------------------------------------------'.grey);
+    console.log(dest.yellow, (' (' + from + ')').green);
+    console.log(msg);
   }
  
-  if(watch) {
-    log('watching');
+  // Watchify the bundle if watch is true
+  if (watch) {
     bundler = watchify(bundler);
     bundler.on('log', log);
   }
  
-  // React transformations
+  // Add React transformations including ES6 extensions
   bundler.transform([reactify, {'es6': true}]);
 
   var rebundle = function() {
@@ -83,31 +88,25 @@ function _bundle(opts) {
  
   bundler.on('update', rebundle);
 
+  // Call this once so that we have a rebundle happen upon first initialization
   rebundle();
-
-  // console.log('bundler', bundler);
 
   return bundler;
 }
 
-function bundleLib(src, dest, externals) {
-  return _bundle({
-    requires: src,
-    dest: dest,
-    watch: true,
-    externals: externals
-  });
-}
-
-function bundle(src, dest, externals) {
+var bundle = function (src, dest, externals) {
   return _bundle({
     src: src,
     dest: dest,
-    watch: true,
     externals: externals
   });
 }
 
-bundle.lib = bundleLib;
+bundle.lib = function (modules, dest) {
+  return _bundle({
+    requires: modules,
+    dest: dest
+  });
+}
 
 module.exports = bundle;
